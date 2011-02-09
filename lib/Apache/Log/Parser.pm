@@ -3,18 +3,20 @@
 package Apache::Log::Parser;
 
 use strict;
-use warnings;
+use 5.008001;
+our $VERSION = '0.01';
+
 use Carp;
 use List::Util qw( reduce );
 
 our @FAST_COMMON_FIELDS = qw( rhost logname user datetime date time timezone request method path proto status bytes );
 our @FAST_COMBINED_FIELDS = (@FAST_COMMON_FIELDS, 'refer', 'agent');
 
-our $COMMON = [" ", [qw(rhost logname user datetime request status bytes)], undef];
-our $COMBINED = [" ", [qw(rhost logname user datetime request status bytes refer agent)], sub{my $x=shift; defined($x->{agent}) and defined($x->{refer})}];
-our $VHOST_COMMON = [" ", [qw( vhost rhost logname user datetime request status bytes )], undef];
+my $COMMON = [" ", [qw(rhost logname user datetime request status bytes)], undef];
+my $COMBINED = [" ", [qw(rhost logname user datetime request status bytes refer agent)], sub{my $x=shift; defined($x->{agent}) and defined($x->{refer})}];
+my $VHOST_COMMON = [" ", [qw( vhost rhost logname user datetime request status bytes )], undef];
 
-our $STRICT_DEFAULT_FORMATS = [$COMBINED, $COMMON, $VHOST_COMMON];
+my $STRICT_DEFAULT_FORMATS = [$COMBINED, $COMMON, $VHOST_COMMON];
 
 our @REQUIRED_FIELDS = qw( rhost logname user datetime request status bytes );
 our @FIELDS_ALWAYS_RETURNED = qw( host logname user datetime date time timezone request method path proto status bytes );
