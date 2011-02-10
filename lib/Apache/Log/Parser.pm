@@ -204,8 +204,8 @@ sub parse_strict {
         }
         next unless reduce { $a and defined($pairs->{$b}) } 1, qw( bytes status request datetime user logname rhost );
 
-        ($pairs->{date}, $pairs->{time}, $pairs->{timezone}) = $pairs->{datetime} =~ m!([^: ]+):([^ ]+)\s([-+0-9]+)!;
-        ($pairs->{method}, $pairs->{path}, $pairs->{proto}) = split(/ /, $pairs->{request}, 3);
+        ($pairs->{date}, $pairs->{time}, $pairs->{timezone}) = ($pairs->{datetime} =~ m!^([^: ]+):([^ ]+)\s([-+0-9]+)$!);
+        ($pairs->{method}, $pairs->{path}, $pairs->{proto}) = ($pairs->{request} =~ m!^(\w+)\s+(.*)\s+(HTTP/.*)$!);
         next unless reduce { $a and defined($pairs->{$b}) } 1, qw( proto path method timezone time date );
 
         next if defined($rule->[2]) and not $rule->[2]->($pairs);
