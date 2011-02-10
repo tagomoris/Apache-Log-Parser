@@ -355,4 +355,169 @@ my $map_y1 = {rhost => '203.0.113.254', logname => '-', user => '-',
     cmp_deeply ($fast_custom->parse($log_y1), $map_y1);
 }
 
+{
+    my $fast = Apache::Log::Parser->new(fast => 1);
+    my $strict = Apache::Log::Parser->new(strict => 1);
+
+    my $build_log = sub {
+        my ($request) = @_;
+        '192.168.0.1 - - [07/Feb/2011:10:59:59 +0900] ' . $request . ' 200 9891';
+    };
+
+    my $r1 = $build_log->('"GET /index HTTP/1.1"'); # normal common
+
+    my $r3 = $build_log->('"GET index HTTP/1.1"'); # path without '/'
+    my $r4 = $build_log->('"GET /x index HTTP/1.1"'); # path with space
+    my $r5 = $build_log->('"GET /hoge/pos\".html HTTP/1.1"'); # path with quoted-"
+
+    my $valid_parsed_map = {
+        rhost => '192.168.0.1', logname => '-', user => '-',
+        datetime => '07/Feb/2011:10:59:59 +0900', date => '07/Feb/2011', time => '10:59:59', timezone => '+0900',
+        status => '200', bytes => '9891'
+    };
+
+    cmp_deeply ($fast->parse($r1), {
+        %{$valid_parsed_map},
+        request => 'GET /index HTTP/1.1', method => 'GET', path => '/index', proto => 'HTTP/1.1'
+    });
+    cmp_deeply ($strict->parse($r1), {
+        %{$valid_parsed_map},
+        request => 'GET /index HTTP/1.1', method => 'GET', path => '/index', proto => 'HTTP/1.1'
+    });
+
+    cmp_deeply ($fast->parse($r3), {
+        %{$valid_parsed_map},
+        request => 'GET index HTTP/1.1', method => 'GET', path => 'index', proto => 'HTTP/1.1'
+    });
+    cmp_deeply ($strict->parse($r3), {
+        %{$valid_parsed_map},
+        request => 'GET index HTTP/1.1', method => 'GET', path => 'index', proto => 'HTTP/1.1'
+    });
+
+    ok (! $fast->parse($r4));
+    cmp_deeply ($strict->parse($r4), {
+        %{$valid_parsed_map},
+        request => 'GET /x index HTTP/1.1', method => 'GET', path => '/x index', proto => 'HTTP/1.1'
+    });
+
+    cmp_deeply ($fast->parse($r5), {
+        %{$valid_parsed_map},
+        request => 'GET /hoge/pos\".html HTTP/1.1', method => 'GET', path => '/hoge/pos\".html', proto => 'HTTP/1.1'
+    });
+    cmp_deeply ($strict->parse($r5), {
+        %{$valid_parsed_map},
+        request => 'GET /hoge/pos".html HTTP/1.1', method => 'GET', path => '/hoge/pos".html', proto => 'HTTP/1.1'
+    });
+}
+
+{
+    my $fast = Apache::Log::Parser->new(fast => 1);
+    my $strict = Apache::Log::Parser->new(strict => 1);
+
+    my $fast_custom = Apache::Log::Parser->new(fast => [[qw(refer agent request_duration)], 'combined', 'common']);
+    my $strict_custom = Apache::Log::Parser->new(strict => [
+        [" ", [qw(rhost logname user datetime request status bytes refer agent request_duration)], sub{my $x=shift;$x->{request_duration} =~ /^\d+$/;}],
+        'combined',
+        'common',
+    ]);
+
+    my $build_log = sub {
+        my ($request, $refer, $agent, $appendix) = @_;
+        if ($appendix) {
+            return '192.168.0.1 - - [07/Feb/2011:10:59:59 +0900] ' . $request . ' 200 9891 ' . $refer . ' ' . $agent . ' ' . $appendix;
+        }
+        '192.168.0.1 - - [07/Feb/2011:10:59:59 +0900] ' . $request . ' 200 9891 ' . $refer . ' ' . $agent;
+    };
+    my $req = '"GET /index.html HTTP/1.1"';
+    my $ref = '"http://example.com/hoge"';
+    my $agent = '"Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_6; en-US) AppleWebKit/534.13 (KHTML, like Gecko) Chrome/9.0.597.94 Safari/534.13"';
+
+    my $r1 = $build_log->($req, $ref, $agent); # normal combined
+    my $r2 = $build_log->($req, $ref, $agent, '850'); # normal combined + %D
+    my $r3 = $build_log->('"GET /x index.html HTTP/1.1"', $ref, $agent); # request with space
+    my $r4 = $build_log->($req, '"http://example.com/hoge\"pos"', $agent); # refer with quoted-"
+    my $r5 = $build_log->($req, $ref, '"Mozilla/5.0 \"TESTING!\""'); # agent with quoted-"
+
+    my $r6 = $build_log->($req, '"http://example.com/hoge\"pos"', $agent, '850'); # refer with quoted-"
+    my $r7 = $build_log->($req, $ref, '"Mozilla/5.0 \"TESTING!\""', '850'); # agent with quoted-"
+
+    my $valid_parsed_map = {
+        rhost => '192.168.0.1', logname => '-', user => '-',
+        datetime => '07/Feb/2011:10:59:59 +0900', date => '07/Feb/2011', time => '10:59:59', timezone => '+0900',
+        request => 'GET /index.html HTTP/1.1', method => 'GET', path => '/index.html', proto => 'HTTP/1.1',
+        status => '200', bytes => '9891',
+        refer => 'http://example.com/hoge',
+        agent => 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_6; en-US) AppleWebKit/534.13 (KHTML, like Gecko) Chrome/9.0.597.94 Safari/534.13',
+    };
+
+    cmp_deeply ($fast->parse($r1), $valid_parsed_map);
+    cmp_deeply ($strict->parse($r1), $valid_parsed_map);
+
+    cmp_deeply ($fast->parse($r2), $valid_parsed_map);
+    cmp_deeply ($strict->parse($r2), $valid_parsed_map);
+
+    ok (! $fast->parse($r3));
+    cmp_deeply ($strict->parse($r3), {
+        %{$valid_parsed_map},
+        request => 'GET /x index.html HTTP/1.1', method => 'GET', path => '/x index.html', proto => 'HTTP/1.1'
+    });
+
+    cmp_deeply ($fast->parse($r4), {
+        %{$valid_parsed_map},
+        refer => 'http://example.com/hoge\\',
+        agent => 'pos' # oh...
+    });
+    cmp_deeply ($strict->parse($r4), {
+        %{$valid_parsed_map},
+        refer => 'http://example.com/hoge"pos'
+    });
+
+    cmp_deeply ($fast->parse($r5), {
+        %{$valid_parsed_map},
+        agent => 'Mozilla/5.0 \\' # oh...
+    });
+    cmp_deeply ($strict->parse($r5), {
+        %{$valid_parsed_map},
+        agent => 'Mozilla/5.0 "TESTING!"'
+    });
+
+    cmp_deeply ($fast->parse($r6), {
+        %{$valid_parsed_map},
+        refer => 'http://example.com/hoge\\',
+        agent => 'pos' # oh...
+    });
+    cmp_deeply ($fast_custom->parse($r6), {
+        %{$valid_parsed_map},
+        refer => 'http://example.com/hoge\\',
+        agent => 'pos', # oh...
+        request_duration => substr($agent, 1, length($agent) - 2), # oh...
+    });
+    cmp_deeply ($strict->parse($r6), {
+        %{$valid_parsed_map},
+        refer => 'http://example.com/hoge"pos',
+    });
+    cmp_deeply ($strict_custom->parse($r6), {
+        %{$valid_parsed_map},
+        refer => 'http://example.com/hoge"pos',
+        agent => substr($agent, 1, length($agent) - 2),
+        request_duration => '850',
+    });
+
+    cmp_deeply ($fast->parse($r7), {
+        %{$valid_parsed_map},
+        agent => 'Mozilla/5.0 \\' # oh...
+    });
+    cmp_deeply ($fast_custom->parse($r7), {
+        %{$valid_parsed_map},
+        agent => 'Mozilla/5.0 \\', # oh...
+        request_duration => 'TESTING!\\', # oh...
+    });
+    cmp_deeply ($strict_custom->parse($r7), {
+        %{$valid_parsed_map},
+        agent => 'Mozilla/5.0 "TESTING!"',
+        request_duration => '850'
+    });
+
+}
+
 done_testing;
