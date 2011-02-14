@@ -28,6 +28,8 @@ sub new {
     my %args = @_;
     croak "only one option from 'strict' or 'fast' required." unless ($args{strict} xor $args{fast});
 
+    $self->{verbose} = exists($args{verbose}) ? $args{verbose} : 0;
+
     if ($args{strict}) {
         my @formats = (ref($args{strict}) ? @{$args{strict}} : ());
         if (scalar(@formats) > 0) {
@@ -107,6 +109,7 @@ sub parse_fast {
     unless (defined($pairs->{status}) and $pairs->{status} ne '' and
                 defined($pairs->{request}) and $pairs->{request} ne '' and
                     defined($pairs->{datetime}) and $pairs->{datetime} ne '') {
+        carp "unknown format: $line" if $self->{verbose};
         return undef;
     }
 
@@ -120,6 +123,7 @@ sub parse_fast {
         next if scalar(keys %result) < $ref->[0] + 13;
         return \%result;
     }
+    carp "unknown format: $line" if $self->{verbose};
     return undef;
 }
 
@@ -226,7 +230,7 @@ sub parse_strict {
 
         return $pairs;
     }
-    carp "unknown format: $line";
+    carp "unknown format: $line" if $self->{verbose};
     return undef;
 }
 
