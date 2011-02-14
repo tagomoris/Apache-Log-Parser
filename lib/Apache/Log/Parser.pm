@@ -10,7 +10,7 @@ use Carp;
 use List::Util qw( reduce );
 
 our @FAST_COMMON_FIELDS = qw( rhost logname user datetime date time timezone request method path proto status bytes );
-our @FAST_COMBINED_FIELDS = (@FAST_COMMON_FIELDS, 'refer', 'agent');
+our @FAST_COMBINED_FIELDS = qw( refer agent );
 
 my $COMMON = [" ", [qw(rhost logname user datetime request status bytes)], undef];
 my $COMBINED = [" ", [qw(rhost logname user datetime request status bytes refer agent)], sub{my $x=shift; defined($x->{agent}) and defined($x->{refer})}];
@@ -62,14 +62,14 @@ sub new {
             my @fields = ();
             foreach my $arg (@args) {
                 if ($arg eq 'common') {
-                    push @fields, [scalar(@FAST_COMMON_FIELDS), \@FAST_COMMON_FIELDS];
+                    push @fields, [0, []];
                 }
                 elsif ($arg eq 'combined') {
                     push @fields, [scalar(@FAST_COMBINED_FIELDS), \@FAST_COMBINED_FIELDS];
                 }
                 elsif (ref($arg)) {
                     my @matchers = @{$arg};
-                    push @fields, [scalar(@FAST_COMMON_FIELDS) + scalar(@matchers), [@FAST_COMMON_FIELDS, @matchers]]
+                    push @fields, [scalar(@matchers), \@matchers];
                 }
                 else {
                     croak "unknow definition for fast parse";
@@ -80,31 +80,45 @@ sub new {
         else {
             $self->{field_lists} = [
                 [scalar(@FAST_COMBINED_FIELDS), \@FAST_COMBINED_FIELDS],
-                [scalar(@FAST_COMMON_FIELDS), \@FAST_COMMON_FIELDS]
+                [0, []]
             ];
         }
-        my $part = q{\s*"?([^"]*)?"?} ;
+        my $part = q{\s*("?([^"]*)"?)?};
         my $common = q{([^\s]*)\s+([^\s]*)\s+([^\s]*)\s+\[(([^: ]+):([^ ]+) ([-+0-9]+))\]\s+"((\w+) ([^\s]*) ([^\s]*))"\s+([^\s]*)\s+([^\s]*)};
         my $common_parts = 13;
         my $max_match_parts = reduce {$a > $b ? $a : $b} 0, map {$_->[0]} @{$self->{field_lists}};
-        my $regex = $common . ($part x ($max_match_parts - $common_parts));
+        my $regex = $common . ($part x $max_match_parts);
         $self->{fastpattern} = qr/\A$regex/;
     }
     return $self;
 }
 
+# our @FAST_COMMON_FIELDS = qw( rhost logname user datetime date time timezone request method path proto status bytes );
 sub parse_fast {
     my ($self, $line) = @_;
     chomp $line;
-    my @values = ($line =~ $self->{fastpattern});
-    my $matches = scalar(grep {$_} @values);
+    my $pairs = {};
+    my @values;
+    ($pairs->{rhost}, $pairs->{logname}, $pairs->{user}, $pairs->{datetime},
+     $pairs->{date}, $pairs->{time}, $pairs->{timezone}, $pairs->{request},
+     $pairs->{method}, $pairs->{path}, $pairs->{proto}, $pairs->{status},
+     $pairs->{bytes}, @values) = ($line =~ $self->{fastpattern});
+
+    unless (defined($pairs->{status}) and $pairs->{status} ne '' and
+                defined($pairs->{request}) and $pairs->{request} ne '' and
+                    defined($pairs->{datetime}) and $pairs->{datetime} ne '') {
+        return undef;
+    }
+
     foreach my $ref (@{$self->{field_lists}}) {
-        next if $ref->[0] > $matches;
-        my $pairs = {};
-        for (my $i = 0; $i < $ref->[0]; $i++) {
-            $pairs->{$ref->[1]->[$i]} = $values[$i];
+        my %result = (%{$pairs});
+        for (my $i = $ref->[0] - 1; $i >= 0; $i--) {
+            my $x = $i * 2;
+            last if $values[$x] eq '' or not defined($values[$x]);
+            $result{$ref->[1]->[$i]} = $values[$x+1];
         }
-        return $pairs;
+        next if scalar(keys %result) < $ref->[0] + 13;
+        return \%result;
     }
     return undef;
 }
