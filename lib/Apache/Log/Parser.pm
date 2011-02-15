@@ -86,8 +86,8 @@ sub new {
             ];
         }
         my $part = q{\s*("?([^"]*)"?)?};
-        my $common = q{([^\s]*)\s+([^\s]*)\s+([^\s]*)\s+\[(([^: ]+):([^ ]+) ([-+0-9]+))\]\s+"((\w+) ([^\s]*) ([^\s]*))"\s+([^\s]*)\s+([^\s]*)};
-        my $common_parts = 13;
+        my $common = q{([^\s]*)\s+([^\s]*)\s+([^\s]*)\s+\[(([^: ]+):([^ ]+) ([-+0-9]+))\]\s+"(([^\s]+) ([^\s]+)( ([^\s"]*))?)"\s+([^\s]*)\s+([^\s]*)};
+        my $common_parts = 14;
         my $max_match_parts = reduce {$a > $b ? $a : $b} 0, map {$_->[0]} @{$self->{field_lists}};
         my $regex = $common . ($part x $max_match_parts);
         $self->{fastpattern} = qr/\A$regex/;
@@ -100,10 +100,11 @@ sub parse_fast {
     my ($self, $line) = @_;
     chomp $line;
     my $pairs = {};
+    my $dummy;
     my @values;
     ($pairs->{rhost}, $pairs->{logname}, $pairs->{user}, $pairs->{datetime},
      $pairs->{date}, $pairs->{time}, $pairs->{timezone}, $pairs->{request},
-     $pairs->{method}, $pairs->{path}, $pairs->{proto}, $pairs->{status},
+     $pairs->{method}, $pairs->{path}, $dummy, $pairs->{proto}, $pairs->{status},
      $pairs->{bytes}, @values) = ($line =~ $self->{fastpattern});
 
     unless (defined($pairs->{status}) and $pairs->{status} ne '' and
@@ -222,9 +223,18 @@ sub parse_strict {
         }
         next unless reduce { $a and defined($pairs->{$b}) } 1, qw( bytes status request datetime user logname rhost );
 
+        my $req;
         ($pairs->{date}, $pairs->{time}, $pairs->{timezone}) = ($pairs->{datetime} =~ m!^([^: ]+):([^ ]+)\s([-+0-9]+)$!);
-        ($pairs->{method}, $pairs->{path}, $pairs->{proto}) = ($pairs->{request} =~ m!^(\w+)\s+(.*)\s+(HTTP/.*)$!);
-        next unless reduce { $a and defined($pairs->{$b}) } 1, qw( proto path method timezone time date );
+        if ($pairs->{request} =~ m!^(.*) (HTTP/\d\.\d)$!) {
+            $pairs->{proto} = $2;
+            $req = $1;
+        }
+        else {
+            $pairs->{proto} = undef;
+            $req = $pairs->{request};
+        }
+        ($pairs->{method}, $pairs->{path}) = split(/\s+/, $req, 2);
+        next unless reduce { $a and defined($pairs->{$b}) } 1, qw( path time date );
 
         next if defined($rule->[2]) and not $rule->[2]->($pairs);
 

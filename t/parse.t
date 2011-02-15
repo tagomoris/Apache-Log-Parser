@@ -408,6 +408,43 @@ my $map_y1 = {rhost => '203.0.113.254', logname => '-', user => '-',
         %{$valid_parsed_map},
         request => 'GET /hoge/pos".html HTTP/1.1', method => 'GET', path => '/hoge/pos".html', proto => 'HTTP/1.1'
     });
+
+    my $build_log09 = sub {
+        my ($request) = @_;
+        '192.168.0.1 - - [07/Feb/2011:10:59:59 +0900] ' . $request . ' 200 -';
+    };
+    my $valid_parsed_map09 = {
+        rhost => '192.168.0.1', logname => '-', user => '-',
+        datetime => '07/Feb/2011:10:59:59 +0900', date => '07/Feb/2011', time => '10:59:59', timezone => '+0900',
+        status => '200', bytes => '-'
+    };
+
+    my $r6 = $build_log09->('"GET /index.html"'); # HTTP/0.9 ? without HTTP protocol version
+    cmp_deeply ($fast->parse($r6), {
+        %{$valid_parsed_map09},
+        request => 'GET /index.html', method => 'GET', path => '/index.html', proto => undef
+    });
+    ok (! $fast->parse($r6)->{proto});
+    cmp_deeply ($strict->parse($r6), {
+        %{$valid_parsed_map09},
+        request => 'GET /index.html', method => 'GET', path => '/index.html', proto => undef
+    });
+    ok (! $strict->parse($r6)->{proto});
+
+    my $r7 = $build_log09->('"lzh\x81GET /music/19810/index.html HTTP/1.1"'); # broken data before HTTP method
+    cmp_deeply ($fast->parse($r7), {
+        %{$valid_parsed_map09},
+        request => 'lzh\x81GET /music/19810/index.html HTTP/1.1', method => 'lzh\x81GET', path => '/music/19810/index.html', proto => 'HTTP/1.1'
+    });
+    cmp_deeply ($strict->parse($r7), {
+        %{$valid_parsed_map09},
+        request => 'lzh\x81GET /music/19810/index.html HTTP/1.1', method => 'lzh\x81GET', path => '/music/19810/index.html', proto => 'HTTP/1.1'
+    });
+
+    my $r8 = $build_log09->('""'); # time out before HTTP request message
+    ok (! $fast->parse($r8));
+    ok (! $strict->parse($r8));
+
 }
 
 {
