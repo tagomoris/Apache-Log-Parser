@@ -4,19 +4,21 @@ package Apache::Log::Parser;
 
 use strict;
 use 5.008001;
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use Carp;
 use List::Util qw( reduce );
 
 our @FAST_COMMON_FIELDS = qw( rhost logname user datetime date time timezone request method path proto status bytes );
 our @FAST_COMBINED_FIELDS = qw( refer agent );
+our @FAST_DEBUG_FIELDS = qw( refer agent duration );
 
 my $COMMON = [" ", [qw(rhost logname user datetime request status bytes)], undef];
 my $COMBINED = [" ", [qw(rhost logname user datetime request status bytes refer agent)], sub{my $x=shift; defined($x->{agent}) and defined($x->{refer})}];
+my $DEBUG = [" ", [qw(rhost logname user datetime request status bytes refer agent duration)], sub{my $x=shift; defined($x->{agent}) and defined($x->{refer}) and defined($x->{duration})}];
 my $VHOST_COMMON = [" ", [qw( vhost rhost logname user datetime request status bytes )], undef];
 
-my $STRICT_DEFAULT_FORMATS = [$COMBINED, $COMMON, $VHOST_COMMON];
+my $STRICT_DEFAULT_FORMATS = [$DEBUG, $COMBINED, $COMMON, $VHOST_COMMON];
 
 our @REQUIRED_FIELDS = qw( rhost logname user datetime request status bytes );
 our @FIELDS_ALWAYS_RETURNED = qw( host logname user datetime date time timezone request method path proto status bytes );
@@ -39,6 +41,9 @@ sub new {
                 }
                 elsif ($formats[$i] eq 'combined') {
                     $formats[$i] = $COMBINED;
+                }
+                elsif ($formats[$i] eq 'debug') {
+                    $formats[$i] = $DEBUG;
                 }
                 elsif ($formats[$i] eq 'vhost_common') {
                     $formats[$i] = $VHOST_COMMON;
@@ -68,6 +73,9 @@ sub new {
                 }
                 elsif ($arg eq 'combined') {
                     push @fields, [scalar(@FAST_COMBINED_FIELDS), \@FAST_COMBINED_FIELDS];
+                }
+                elsif ($arg eq 'debug') {
+                    push @fields, [scalar(@FAST_DEBUG_FIELDS), \@FAST_DEBUG_FIELDS];
                 }
                 elsif (ref($arg)) {
                     my @matchers = @{$arg};

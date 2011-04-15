@@ -24,6 +24,18 @@ use_ok "Apache::Log::Parser";
     ok (! Apache::Log::Parser::has_unquoted_tail_doublequote('hoge\\\\\\\\\\"'));
 }
 
+# debug
+my $log_z1 = '192.168.0.1 - - [07/Feb/2011:10:59:59 +0900] "GET /x/i.cgi/net/0000/ HTTP/1.1" 200 9891 "-" "DoCoMo/2.0 P03B(c500;TB;W24H16)" 3210';
+my $set_z1 = ['192.168.0.1', '-', '-', '07/Feb/2011:10:59:59 +0900',
+              'GET /x/i.cgi/net/0000/ HTTP/1.1', '200', '9891',
+              '-', 'DoCoMo/2.0 P03B(c500;TB;W24H16)', '3210'];
+my $map_z1 = {rhost => '192.168.0.1', logname => '-', user => '-',
+              datetime => '07/Feb/2011:10:59:59 +0900', date => '07/Feb/2011', time => '10:59:59', timezone => '+0900',
+              request => 'GET /x/i.cgi/net/0000/ HTTP/1.1', method => 'GET', path => '/x/i.cgi/net/0000/', proto => 'HTTP/1.1',
+              status => '200', bytes => '9891',
+              refer => '-', agent => 'DoCoMo/2.0 P03B(c500;TB;W24H16)', duration => '3210'};
+
+
 # combined
 my $log_a1 = '192.168.0.1 - - [07/Feb/2011:10:59:59 +0900] "GET /x/i.cgi/net/0000/ HTTP/1.1" 200 9891 "-" "DoCoMo/2.0 P03B(c500;TB;W24H16)"';
 my $set_a1 = ['192.168.0.1', '-', '-', '07/Feb/2011:10:59:59 +0900',
@@ -201,6 +213,10 @@ my $map_y1 = {rhost => '203.0.113.254', logname => '-', user => '-',
 {
     my @result;
 
+    # debug
+    @result = Apache::Log::Parser::separate_log_items(' ', $log_z1);
+    cmp_set (\@result, $set_z1);
+
     # combined
     @result = Apache::Log::Parser::separate_log_items(' ', $log_a1);
     cmp_set (\@result, $set_a1);
@@ -262,6 +278,8 @@ my $map_y1 = {rhost => '203.0.113.254', logname => '-', user => '-',
 
 {
     my $std_parser = new_ok('Apache::Log::Parser' => ['strict' => 1]);
+    cmp_deeply ($std_parser->parse($log_z1), $map_z1);
+
     cmp_deeply ($std_parser->parse($log_a1), $map_a1);
     cmp_deeply ($std_parser->parse($log_a2), $map_a2);
     cmp_deeply ($std_parser->parse($log_a3), $map_a3);
@@ -275,11 +293,14 @@ my $map_y1 = {rhost => '203.0.113.254', logname => '-', user => '-',
     my @instanciate_options = ( strict => [
         ["\t", \@customized_fields, sub{my $x=shift;defined($x->{vhost}) and defined($x->{usertrack}) and defined($x->{mobileid})}],
         [" ", \@customized_fields, sub{my $x=shift;defined($x->{vhost}) and defined($x->{usertrack}) and defined($x->{mobileid})}],
+        'debug',
         'combined',
         'common',
         'vhost_common',
     ]);
     my $parser = new_ok('Apache::Log::Parser' => \@instanciate_options);
+
+    cmp_deeply ($parser->parse($log_z1), $map_z1);
 
     cmp_deeply ($parser->parse($log_a1), $map_a1);
     cmp_deeply ($parser->parse($log_a2), $map_a2);
@@ -299,6 +320,7 @@ my $map_y1 = {rhost => '203.0.113.254', logname => '-', user => '-',
 
 {
     my $fast_basic = Apache::Log::Parser->new(fast => 1);
+
     cmp_deeply ($fast_basic->parse($log_a1), $map_a1);
     cmp_deeply ($fast_basic->parse($log_a2), $map_a2);
     cmp_deeply ($fast_basic->parse($log_a3), $map_a3);
@@ -323,7 +345,10 @@ my $map_y1 = {rhost => '203.0.113.254', logname => '-', user => '-',
         }
     );
 
-    my $fast_custom = Apache::Log::Parser->new(fast => [[qw(refer agent vhost usertrack mobileid request_duration)], 'combined', 'common']);
+    my $fast_custom = Apache::Log::Parser->new(fast => [[qw(refer agent vhost usertrack mobileid request_duration)], 'debug', 'combined', 'common']);
+
+    cmp_deeply ($fast_custom->parse($log_z1), $map_z1);
+
     cmp_deeply ($fast_custom->parse($log_a1), $map_a1);
     cmp_deeply ($fast_custom->parse($log_a2), $map_a2);
     cmp_deeply ($fast_custom->parse($log_a3), $map_a3);
@@ -345,6 +370,7 @@ my $map_y1 = {rhost => '203.0.113.254', logname => '-', user => '-',
             request => 'GET /x/i.cgi/net/0000/ HTTP/1.1', method => 'GET', path => '/x/i.cgi/net/0000/', proto => 'HTTP/1.1',
             status => '200', bytes => '9891',
             refer => '-', agent => 'DoCoMo/2.0 P03B(c500;TB;W24H16)',
+            duration => '520',
         }
     );
 
@@ -484,7 +510,10 @@ my $map_y1 = {rhost => '203.0.113.254', logname => '-', user => '-',
 
     my $r2 = $build_log->($req, $ref, $agent, '850'); # normal combined + %D
     cmp_deeply ($fast->parse($r2), $valid_parsed_map);
-    cmp_deeply ($strict->parse($r2), $valid_parsed_map);
+    cmp_deeply ($strict->parse($r2), {
+        %{$valid_parsed_map},
+        duration => '850'
+    });
 
     my $r3 = $build_log->('"GET /x index.html HTTP/1.1"', $ref, $agent); # request with space
     ok (! $fast->parse($r3));
@@ -529,6 +558,7 @@ my $map_y1 = {rhost => '203.0.113.254', logname => '-', user => '-',
     cmp_deeply ($strict->parse($r6), {
         %{$valid_parsed_map},
         refer => 'http://example.com/hoge"pos',
+        duration => '850'
     });
     cmp_deeply ($strict_custom->parse($r6), {
         %{$valid_parsed_map},
