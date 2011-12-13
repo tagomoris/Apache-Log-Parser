@@ -145,7 +145,8 @@ my $set_f3 = ['host-x.example.jp', '203.0.113.254', '-', '-', '07/Feb/2011:10:59
 # customized format: combined + %v + mod_usertrack cookie + cellular phone ID + %D
 my @customized_fields = qw( rhost logname user datetime request status bytes refer agent vhost usertrack mobileid request_duration );
 
-my $log_x1 = '192.168.0.1 - - [07/Feb/2011:10:59:59 +0900] "GET /x/i.cgi/net/0000/ HTTP/1.1" 200 9891 "-" "DoCoMo/2.0 P03B(c500;TB;W24H16)" "virtualhost.example.jp" "192.0.2.16794832933550" "09011112222333_xx.ezweb.ne.jp" 533593';
+# log pattern for non-double-quote-quoted vhost
+my $log_x1 = '192.168.0.1 - - [07/Feb/2011:10:59:59 +0900] "GET /x/i.cgi/net/0000/ HTTP/1.1" 200 9891 "-" "DoCoMo/2.0 P03B(c500;TB;W24H16)" virtualhost.example.jp "192.0.2.16794832933550" "09011112222333_xx.ezweb.ne.jp" 533593';
 my $set_x1 = ['192.168.0.1', '-', '-', '07/Feb/2011:10:59:59 +0900',
               'GET /x/i.cgi/net/0000/ HTTP/1.1', '200', '9891',
               '-', 'DoCoMo/2.0 P03B(c500;TB;W24H16)',
@@ -523,38 +524,38 @@ my $map_y1 = {rhost => '203.0.113.254', logname => '-', user => '-',
     });
 
     my $r4 = $build_log->($req, '"http://example.com/hoge\"pos"', $agent); # refer with quoted-"
-    cmp_deeply ($fast->parse($r4), {
-        %{$valid_parsed_map},
-        refer => 'http://example.com/hoge\\',
-        agent => 'pos' # oh...
-    });
+    # cmp_deeply ($fast->parse($r4), {
+    #     %{$valid_parsed_map},
+    #     refer => 'http://example.com/hoge\\',
+    #     agent => 'pos' # oh...
+    # });
     cmp_deeply ($strict->parse($r4), {
         %{$valid_parsed_map},
         refer => 'http://example.com/hoge"pos'
     });
 
     my $r5 = $build_log->($req, $ref, '"Mozilla/5.0 \"TESTING!\""'); # agent with quoted-"
-    cmp_deeply ($fast->parse($r5), {
-        %{$valid_parsed_map},
-        agent => 'Mozilla/5.0 \\' # oh...
-    });
+    # cmp_deeply ($fast->parse($r5), {
+    #     %{$valid_parsed_map},
+    #     agent => 'Mozilla/5.0 \\' # oh...
+    # });
     cmp_deeply ($strict->parse($r5), {
         %{$valid_parsed_map},
         agent => 'Mozilla/5.0 "TESTING!"'
     });
 
     my $r6 = $build_log->($req, '"http://example.com/hoge\"pos"', $agent, '850'); # refer with quoted-"
-    cmp_deeply ($fast->parse($r6), {
-        %{$valid_parsed_map},
-        refer => 'http://example.com/hoge\\',
-        agent => 'pos' # oh...
-    });
-    cmp_deeply ($fast_custom->parse($r6), {
-        %{$valid_parsed_map},
-        refer => 'http://example.com/hoge\\',
-        agent => 'pos', # oh...
-        request_duration => substr($agent, 1, length($agent) - 2), # oh...
-    });
+    # cmp_deeply ($fast->parse($r6), {
+    #     %{$valid_parsed_map},
+    #     refer => 'http://example.com/hoge\\',
+    #     agent => 'pos' # oh...
+    # });
+    # cmp_deeply ($fast_custom->parse($r6), {
+    #     %{$valid_parsed_map},
+    #     refer => 'http://example.com/hoge\\',
+    #     agent => 'pos', # oh...
+    #     request_duration => substr($agent, 1, length($agent) - 2), # oh...
+    # });
     cmp_deeply ($strict->parse($r6), {
         %{$valid_parsed_map},
         refer => 'http://example.com/hoge"pos',
@@ -568,15 +569,15 @@ my $map_y1 = {rhost => '203.0.113.254', logname => '-', user => '-',
     });
 
     my $r7 = $build_log->($req, $ref, '"Mozilla/5.0 \"TESTING!\""', '850'); # agent with quoted-"
-    cmp_deeply ($fast->parse($r7), {
-        %{$valid_parsed_map},
-        agent => 'Mozilla/5.0 \\' # oh...
-    });
-    cmp_deeply ($fast_custom->parse($r7), {
-        %{$valid_parsed_map},
-        agent => 'Mozilla/5.0 \\', # oh...
-        request_duration => 'TESTING!\\', # oh...
-    });
+    # cmp_deeply ($fast->parse($r7), {
+    #     %{$valid_parsed_map},
+    #     agent => 'Mozilla/5.0 \\' # oh...
+    # });
+    # cmp_deeply ($fast_custom->parse($r7), {
+    #     %{$valid_parsed_map},
+    #     agent => 'Mozilla/5.0 \\', # oh...
+    #     request_duration => 'TESTING!\\', # oh...
+    # });
     cmp_deeply ($strict_custom->parse($r7), {
         %{$valid_parsed_map},
         agent => 'Mozilla/5.0 "TESTING!"',
