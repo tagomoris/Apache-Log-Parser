@@ -93,7 +93,6 @@ sub new {
                 [0, []]
             ];
         }
-        #my $part = q{\s+(?:"?([^"]*)"?)?};
         my $part = q{\s*(?:"([^"]*)"|([^\s]+))?};
         my $common = q{([^\s]*)\s+([^\s]*)\s+([^\s]*)\s+\[(([^: ]+):([^ ]+) ([-+0-9]+))\]\s+"(([^\s]+) ([^\s]+)( ([^\s"]*))?)"\s+([^\s]*)\s+([^\s]*)};
         my $common_parts = 14;
@@ -124,19 +123,13 @@ sub parse_fast {
     }
 
     foreach my $ref (@{$self->{field_lists}}) {
-        #use Data::Dumper; warn Dumper +{line => $line, values => \@values, fields => $ref};
         my %result = (%{$pairs}); # copy not to break $pairs while trying to parse
         for (my $i = $ref->[0] - 1; $i >= 0; $i--) {
             my $x = $i * 2;
-            my $v = defined($values[$x]) ? $values[$x] : $values[$x + 1]; # add
-            #last if $values[$x] eq '' or not defined($values[$x]);
-            #last if not defined $v or $v eq ''; # add
-            last if not defined $v; # add
-            # $result{$ref->[1]->[$i]} = $values[$x+1];
+            my $v = defined($values[$x]) ? $values[$x] : $values[$x + 1];
+            last if not defined $v;
             $result{$ref->[1]->[$i]} = $v;
         }
-        #next if scalar(keys %result) < $ref->[0] + 13;
-        #return \%result;
         return \%result if scalar(keys %result) >= $ref->[0] + 13;
     }
     carp "unknown format: $line" if $self->{verbose};
