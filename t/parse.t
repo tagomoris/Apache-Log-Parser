@@ -33,7 +33,7 @@ my $map_z1 = {rhost => '192.168.0.1', logname => '-', user => '-',
               datetime => '07/Feb/2011:10:59:59 +0900', date => '07/Feb/2011', time => '10:59:59', timezone => '+0900',
               request => 'GET /x/i.cgi/net/0000/ HTTP/1.1', method => 'GET', path => '/x/i.cgi/net/0000/', proto => 'HTTP/1.1',
               status => '200', bytes => '9891',
-              refer => '-', agent => 'DoCoMo/2.0 P03B(c500;TB;W24H16)', duration => '3210'};
+              referer => '-', agent => 'DoCoMo/2.0 P03B(c500;TB;W24H16)', duration => '3210'};
 
 
 # combined
@@ -45,7 +45,7 @@ my $map_a1 = {rhost => '192.168.0.1', logname => '-', user => '-',
               datetime => '07/Feb/2011:10:59:59 +0900', date => '07/Feb/2011', time => '10:59:59', timezone => '+0900',
               request => 'GET /x/i.cgi/net/0000/ HTTP/1.1', method => 'GET', path => '/x/i.cgi/net/0000/', proto => 'HTTP/1.1',
               status => '200', bytes => '9891',
-              refer => '-', agent => 'DoCoMo/2.0 P03B(c500;TB;W24H16)'};
+              referer => '-', agent => 'DoCoMo/2.0 P03B(c500;TB;W24H16)'};
 my $log_a2 = '192.0.2.130 - - [07/Feb/2011:10:59:59 +0900] "GET /hoge.cgi?param1=9999-1&param2=AAABC&param3=-&ref=/x/i.cgi/net/000&guid=ON HTTP/1.1" 200 35 "-" "DoCoMo/2.0 F905i(c100;TB;W24H17)"';
 my $set_a2 = ['192.0.2.130', '-', '-', '07/Feb/2011:10:59:59 +0900',
               'GET /hoge.cgi?param1=9999-1&param2=AAABC&param3=-&ref=/x/i.cgi/net/000&guid=ON HTTP/1.1', '200', '35',
@@ -55,7 +55,7 @@ my $map_a2 = {rhost => '192.0.2.130', logname => '-', user => '-',
               request => 'GET /hoge.cgi?param1=9999-1&param2=AAABC&param3=-&ref=/x/i.cgi/net/000&guid=ON HTTP/1.1',
               method => 'GET', path => '/hoge.cgi?param1=9999-1&param2=AAABC&param3=-&ref=/x/i.cgi/net/000&guid=ON', proto => 'HTTP/1.1',
               status => '200', bytes => '35',
-              refer => '-', agent => 'DoCoMo/2.0 F905i(c100;TB;W24H17)'};
+              referer => '-', agent => 'DoCoMo/2.0 F905i(c100;TB;W24H17)'};
 my $log_a3 = '203.0.113.254 - - [07/Feb/2011:10:59:59 -0700] "GET /x/i.cgi/movie/0001/-0002 HTTP/1.1" 200 14462 "http://www.google.co.jp/search?hl=ja&&sa=X&ei=HqhQTf2ONoKlcf6ZtNcG&ved=0CCsQBSgA&q=movie&spell=1" "DoCoMo/2.0 F08A3(c500;TB;W30H20)"';
 my $set_a3 = ['203.0.113.254', '-', '-', '07/Feb/2011:10:59:59 -0700',
               'GET /x/i.cgi/movie/0001/-0002 HTTP/1.1', '200', '14462',
@@ -65,7 +65,7 @@ my $map_a3 = {rhost => '203.0.113.254', logname => '-', user => '-',
               request => 'GET /x/i.cgi/movie/0001/-0002 HTTP/1.1',
               method => 'GET', path => '/x/i.cgi/movie/0001/-0002', proto => 'HTTP/1.1',
               status => '200', bytes => '14462',
-              refer => 'http://www.google.co.jp/search?hl=ja&&sa=X&ei=HqhQTf2ONoKlcf6ZtNcG&ved=0CCsQBSgA&q=movie&spell=1',
+              referer => 'http://www.google.co.jp/search?hl=ja&&sa=X&ei=HqhQTf2ONoKlcf6ZtNcG&ved=0CCsQBSgA&q=movie&spell=1',
               agent => 'DoCoMo/2.0 F08A3(c500;TB;W30H20)'};
 
 # TAB separated combined
@@ -143,7 +143,7 @@ my $set_f3 = ['host-x.example.jp', '203.0.113.254', '-', '-', '07/Feb/2011:10:59
 
 
 # customized format: combined + %v + mod_usertrack cookie + cellular phone ID + %D
-my @customized_fields = qw( rhost logname user datetime request status bytes refer agent vhost usertrack mobileid request_duration );
+my @customized_fields = qw( rhost logname user datetime request status bytes referer agent vhost usertrack mobileid request_duration );
 
 # log pattern for non-double-quote-quoted vhost
 my $log_x1 = '192.168.0.1 - - [07/Feb/2011:10:59:59 +0900] "GET /x/i.cgi/net/0000/ HTTP/1.1" 200 9891 "-" "DoCoMo/2.0 P03B(c500;TB;W24H16)" virtualhost.example.jp "192.0.2.16794832933550" "09011112222333_xx.ezweb.ne.jp" 533593';
@@ -158,7 +158,7 @@ my $map_x1 = {rhost => '192.168.0.1', logname => '-', user => '-',
               request => 'GET /x/i.cgi/net/0000/ HTTP/1.1',
               method => 'GET', path => '/x/i.cgi/net/0000/', proto => 'HTTP/1.1',
               status => '200', bytes => '9891',
-              refer => '-', agent => 'DoCoMo/2.0 P03B(c500;TB;W24H16)',
+              referer => '-', agent => 'DoCoMo/2.0 P03B(c500;TB;W24H16)',
               vhost => 'virtualhost.example.jp',
               usertrack => '192.0.2.16794832933550', mobileid => '09011112222333_xx.ezweb.ne.jp',
               request_duration => '533593'};
@@ -174,7 +174,7 @@ my $map_x2 = {rhost => '192.0.2.130', logname => '-', user => '-',
               request => 'GET /hoge.cgi?param1=9999-1&param2=AAABC&param3=-&ref=/x/i.cgi/net/000&guid=ON HTTP/1.1',
               method => 'GET', path => '/hoge.cgi?param1=9999-1&param2=AAABC&param3=-&ref=/x/i.cgi/net/000&guid=ON', proto => 'HTTP/1.1',
               status => '200', bytes => '35',
-              refer => '-', agent => 'DoCoMo/2.0 F905i(c100;TB;W24H17)',
+              referer => '-', agent => 'DoCoMo/2.0 F905i(c100;TB;W24H17)',
               vhost => 'virtualhost.example.jp', usertrack => '192.0.2.16794832933550', mobileid => '-',
               request_duration => '533593'};
 my $log_x3 = '203.0.113.254 - - [07/Feb/2011:10:59:59 -0700] "GET /x/i.cgi/movie/0001/-0002 HTTP/1.1" 200 14462 "http://www.google.co.jp/search?hl=ja&&sa=X&ei=HqhQTf2ONoKlcf6ZtNcG&ved=0CCsQBSgA&q=movie&spell=1" "DoCoMo/2.0 F08A3(c500;TB;W30H20)" "virtualhost.example.jp" "-" "-" 533593';
@@ -189,7 +189,7 @@ my $map_x3 = {rhost => '203.0.113.254', logname => '-', user => '-',
               request => 'GET /x/i.cgi/movie/0001/-0002 HTTP/1.1',
               method => 'GET', path => '/x/i.cgi/movie/0001/-0002', proto => 'HTTP/1.1',
               status => '200', bytes => '14462',
-              refer => 'http://www.google.co.jp/search?hl=ja&&sa=X&ei=HqhQTf2ONoKlcf6ZtNcG&ved=0CCsQBSgA&q=movie&spell=1',
+              referer => 'http://www.google.co.jp/search?hl=ja&&sa=X&ei=HqhQTf2ONoKlcf6ZtNcG&ved=0CCsQBSgA&q=movie&spell=1',
               agent => 'DoCoMo/2.0 F08A3(c500;TB;W30H20)',
               vhost => 'virtualhost.example.jp', usertrack => '-', mobileid => '-',
               request_duration => '533593'};
@@ -207,7 +207,7 @@ my $map_y1 = {rhost => '203.0.113.254', logname => '-', user => '-',
               request => 'GET /x/i.cgi/movie/0001/-0002 HTTP/1.1',
               method => 'GET', path => '/x/i.cgi/movie/0001/-0002', proto => 'HTTP/1.1',
               status => '200', bytes => '14462',
-              refer => 'http://headlines.yahoo.co.jp/hl', agent => 'DoCoMo/2.0 F08A3(c500;TB;W30H20)',
+              referer => 'http://headlines.yahoo.co.jp/hl', agent => 'DoCoMo/2.0 F08A3(c500;TB;W30H20)',
               vhost => 'virtualhost.example.jp', usertrack => '192.0.2.16794832933550', mobileid => '09011112222333_xx.ezweb.ne.jp',
               request_duration => '533593'};
 
@@ -342,11 +342,11 @@ my $map_y1 = {rhost => '203.0.113.254', logname => '-', user => '-',
             datetime => '07/Feb/2011:10:59:59 +0900', date => '07/Feb/2011', time => '10:59:59', timezone => '+0900',
             request => 'GET /x/i.cgi/net/0000/ HTTP/1.1', method => 'GET', path => '/x/i.cgi/net/0000/', proto => 'HTTP/1.1',
             status => '200', bytes => '9891',
-            refer => '-', agent => 'DoCoMo/2.0 P03B(c500;TB;W24H16)',
+            referer => '-', agent => 'DoCoMo/2.0 P03B(c500;TB;W24H16)',
         }
     );
 
-    my $fast_custom = Apache::Log::Parser->new(fast => [[qw(refer agent vhost usertrack mobileid request_duration)], 'debug', 'combined', 'common']);
+    my $fast_custom = Apache::Log::Parser->new(fast => [[qw(referer agent vhost usertrack mobileid request_duration)], 'debug', 'combined', 'common']);
 
     cmp_deeply ($fast_custom->parse($log_z1), $map_z1);
 
@@ -370,7 +370,7 @@ my $map_y1 = {rhost => '203.0.113.254', logname => '-', user => '-',
             datetime => '07/Feb/2011:10:59:59 +0900', date => '07/Feb/2011', time => '10:59:59', timezone => '+0900',
             request => 'GET /x/i.cgi/net/0000/ HTTP/1.1', method => 'GET', path => '/x/i.cgi/net/0000/', proto => 'HTTP/1.1',
             status => '200', bytes => '9891',
-            refer => '-', agent => 'DoCoMo/2.0 P03B(c500;TB;W24H16)',
+            referer => '-', agent => 'DoCoMo/2.0 P03B(c500;TB;W24H16)',
             duration => '520',
         }
     );
@@ -478,19 +478,19 @@ my $map_y1 = {rhost => '203.0.113.254', logname => '-', user => '-',
     my $fast = Apache::Log::Parser->new(fast => 1);
     my $strict = Apache::Log::Parser->new(strict => 1);
 
-    my $fast_custom = Apache::Log::Parser->new(fast => [[qw(refer agent request_duration)], 'combined', 'common']);
+    my $fast_custom = Apache::Log::Parser->new(fast => [[qw(referer agent request_duration)], 'combined', 'common']);
     my $strict_custom = Apache::Log::Parser->new(strict => [
-        [" ", [qw(rhost logname user datetime request status bytes refer agent request_duration)], sub{my $x=shift;defined($x->{request_duration}) and $x->{request_duration} =~ /^\d+$/;}],
+        [" ", [qw(rhost logname user datetime request status bytes referer agent request_duration)], sub{my $x=shift;defined($x->{request_duration}) and $x->{request_duration} =~ /^\d+$/;}],
         'combined',
         'common',
     ]);
 
     my $build_log = sub {
-        my ($request, $refer, $agent, $appendix) = @_;
+        my ($request, $referer, $agent, $appendix) = @_;
         if ($appendix) {
-            return '192.168.0.1 - - [07/Feb/2011:10:59:59 +0900] ' . $request . ' 200 9891 ' . $refer . ' ' . $agent . ' ' . $appendix;
+            return '192.168.0.1 - - [07/Feb/2011:10:59:59 +0900] ' . $request . ' 200 9891 ' . $referer . ' ' . $agent . ' ' . $appendix;
         }
-        '192.168.0.1 - - [07/Feb/2011:10:59:59 +0900] ' . $request . ' 200 9891 ' . $refer . ' ' . $agent;
+        '192.168.0.1 - - [07/Feb/2011:10:59:59 +0900] ' . $request . ' 200 9891 ' . $referer . ' ' . $agent;
     };
     my $req = '"GET /index.html HTTP/1.1"';
     my $ref = '"http://example.com/hoge"';
@@ -501,7 +501,7 @@ my $map_y1 = {rhost => '203.0.113.254', logname => '-', user => '-',
         datetime => '07/Feb/2011:10:59:59 +0900', date => '07/Feb/2011', time => '10:59:59', timezone => '+0900',
         request => 'GET /index.html HTTP/1.1', method => 'GET', path => '/index.html', proto => 'HTTP/1.1',
         status => '200', bytes => '9891',
-        refer => 'http://example.com/hoge',
+        referer => 'http://example.com/hoge',
         agent => 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_6; en-US) AppleWebKit/534.13 (KHTML, like Gecko) Chrome/9.0.597.94 Safari/534.13',
     };
 
@@ -523,15 +523,15 @@ my $map_y1 = {rhost => '203.0.113.254', logname => '-', user => '-',
         request => 'GET /x index.html HTTP/1.1', method => 'GET', path => '/x index.html', proto => 'HTTP/1.1'
     });
 
-    my $r4 = $build_log->($req, '"http://example.com/hoge\"pos"', $agent); # refer with quoted-"
+    my $r4 = $build_log->($req, '"http://example.com/hoge\"pos"', $agent); # referer with quoted-"
     # cmp_deeply ($fast->parse($r4), {
     #     %{$valid_parsed_map},
-    #     refer => 'http://example.com/hoge\\',
+    #     referer => 'http://example.com/hoge\\',
     #     agent => 'pos' # oh...
     # });
     cmp_deeply ($strict->parse($r4), {
         %{$valid_parsed_map},
-        refer => 'http://example.com/hoge"pos'
+        referer => 'http://example.com/hoge"pos'
     });
 
     my $r5 = $build_log->($req, $ref, '"Mozilla/5.0 \"TESTING!\""'); # agent with quoted-"
@@ -544,26 +544,26 @@ my $map_y1 = {rhost => '203.0.113.254', logname => '-', user => '-',
         agent => 'Mozilla/5.0 "TESTING!"'
     });
 
-    my $r6 = $build_log->($req, '"http://example.com/hoge\"pos"', $agent, '850'); # refer with quoted-"
+    my $r6 = $build_log->($req, '"http://example.com/hoge\"pos"', $agent, '850'); # referer with quoted-"
     # cmp_deeply ($fast->parse($r6), {
     #     %{$valid_parsed_map},
-    #     refer => 'http://example.com/hoge\\',
+    #     referer => 'http://example.com/hoge\\',
     #     agent => 'pos' # oh...
     # });
     # cmp_deeply ($fast_custom->parse($r6), {
     #     %{$valid_parsed_map},
-    #     refer => 'http://example.com/hoge\\',
+    #     referer => 'http://example.com/hoge\\',
     #     agent => 'pos', # oh...
     #     request_duration => substr($agent, 1, length($agent) - 2), # oh...
     # });
     cmp_deeply ($strict->parse($r6), {
         %{$valid_parsed_map},
-        refer => 'http://example.com/hoge"pos',
+        referer => 'http://example.com/hoge"pos',
         duration => '850'
     });
     cmp_deeply ($strict_custom->parse($r6), {
         %{$valid_parsed_map},
-        refer => 'http://example.com/hoge"pos',
+        referer => 'http://example.com/hoge"pos',
         agent => substr($agent, 1, length($agent) - 2),
         request_duration => '850',
     });
@@ -587,47 +587,47 @@ my $map_y1 = {rhost => '203.0.113.254', logname => '-', user => '-',
     my $r8 = $build_log->($req, '"-"', '""'); # blank string for agent
     cmp_deeply ($fast->parse($r8), {
         %{$valid_parsed_map},
-        refer => '-',
+        referer => '-',
         agent => ''
     });
     cmp_deeply ($fast_custom->parse($r8), {
         %{$valid_parsed_map},
-        refer => '-',
+        referer => '-',
         agent => '',
     });
     ok (! exists( $fast_custom->parse($r8)->{request_duration} ));
     cmp_deeply ($strict->parse($r8), {
         %{$valid_parsed_map},
-        refer => '-',
+        referer => '-',
         agent => ''
     });
     cmp_deeply ($strict_custom->parse($r8), {
         %{$valid_parsed_map},
-        refer => '-',
+        referer => '-',
         agent => '',
     });
     ok (! exists( $strict_custom->parse($r8)->{request_duration} ));
 
-    my $r9 = $build_log->($req, '""', '"-"'); # blank string for refer
+    my $r9 = $build_log->($req, '""', '"-"'); # blank string for referer
     cmp_deeply ($fast->parse($r9), {
         %{$valid_parsed_map},
-        refer => '',
+        referer => '',
         agent => '-'
     });
     cmp_deeply ($fast_custom->parse($r9), {
         %{$valid_parsed_map},
-        refer => '',
+        referer => '',
         agent => '-',
     });
     ok (! exists( $fast_custom->parse($r9)->{request_duration} ));
     cmp_deeply ($strict->parse($r9), {
         %{$valid_parsed_map},
-        refer => '',
+        referer => '',
         agent => '-'
     });
     cmp_deeply ($strict_custom->parse($r9), {
         %{$valid_parsed_map},
-        refer => '',
+        referer => '',
         agent => '-',
     });
     ok (! exists( $strict_custom->parse($r9)->{request_duration} ));

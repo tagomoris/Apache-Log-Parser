@@ -12,12 +12,12 @@ my $custom = q{localhost.local - - [04/Oct/2007:12:34:56 +0900] "GET /index.html
 
 my $default_fast = Apache::Log::Parser->new( fast => 1 );
 my $common_fast = Apache::Log::Parser->new( fast => ['common'] );
-my $custom_fast = Apache::Log::Parser->new( fast => [[qw(refer agent vhost usertrack mobileid request_duration)], 'combined', 'common'] );
+my $custom_fast = Apache::Log::Parser->new( fast => [[qw(referer agent vhost usertrack mobileid request_duration)], 'combined', 'common'] );
 
 my $default_strict = Apache::Log::Parser->new( strict => 1 );
 my $common_strict = Apache::Log::Parser->new( strict => ['common'] );
 
-my @customized_fields = qw( rhost logname user datetime request status bytes refer agent vhost usertrack mobileid request_duration );
+my @customized_fields = qw( rhost logname user datetime request status bytes referer agent vhost usertrack mobileid request_duration );
 my $custom_strict = Apache::Log::Parser->new( strict => [
     [" ", \@customized_fields, sub{my $x=shift;defined($x->{vhost}) and defined($x->{usertrack}) and defined($x->{mobileid})}],
     'combined',

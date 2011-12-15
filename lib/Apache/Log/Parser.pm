@@ -10,12 +10,12 @@ use Carp;
 use List::Util qw( reduce );
 
 our @FAST_COMMON_FIELDS = qw( rhost logname user datetime date time timezone request method path proto status bytes );
-our @FAST_COMBINED_FIELDS = qw( refer agent );
-our @FAST_DEBUG_FIELDS = qw( refer agent duration );
+our @FAST_COMBINED_FIELDS = qw( referer agent );
+our @FAST_DEBUG_FIELDS = qw( referer agent duration );
 
 my $COMMON = [" ", [qw(rhost logname user datetime request status bytes)], undef];
-my $COMBINED = [" ", [qw(rhost logname user datetime request status bytes refer agent)], sub{my $x=shift; defined($x->{agent}) and defined($x->{refer})}];
-my $DEBUG = [" ", [qw(rhost logname user datetime request status bytes refer agent duration)], sub{my $x=shift; defined($x->{agent}) and defined($x->{refer}) and defined($x->{duration})}];
+my $COMBINED = [" ", [qw(rhost logname user datetime request status bytes referer agent)], sub{my $x=shift; defined($x->{agent}) and defined($x->{referer})}];
+my $DEBUG = [" ", [qw(rhost logname user datetime request status bytes referer agent duration)], sub{my $x=shift; defined($x->{agent}) and defined($x->{referer}) and defined($x->{duration})}];
 my $VHOST_COMMON = [" ", [qw( vhost rhost logname user datetime request status bytes )], undef];
 
 my $STRICT_DEFAULT_FORMATS = [$DEBUG, $COMBINED, $COMMON, $VHOST_COMMON];
@@ -298,7 +298,7 @@ It can process only 'common', 'combined' and custom styles with compatibility wi
   192.168.0.1 - - [07/Feb/2011:10:59:59 +0900] "GET /path/to/file.html HTTP/1.1" 200 9891 "-" "DoCoMo/2.0 P03B(c500;TB;W24H16)"
   COMBINED
   
-  # $log1->{rhost}, $log1->{date}, $log1->{path}, $log1->{refer}, $log1->{agent}, ...
+  # $log1->{rhost}, $log1->{date}, $log1->{path}, $log1->{referer}, $log1->{agent}, ...
   
   my $log2 = $parser->parse(<<COMMON); # parsed as 'common'
   192.168.0.1 - - [07/Feb/2011:10:59:59 +0900] "GET /path/to/file.html HTTP/1.1" 200 9891
@@ -306,7 +306,7 @@ It can process only 'common', 'combined' and custom styles with compatibility wi
   
   # For custom style(additional fields after 'common'), 'combined' and common
   # custom style: LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" \"%v\" \"%{cookie}n\" %D"
-  my $c_parser = Apache::Log::Parser->new( fast => [[qw(refer agent vhost usertrack request_duration)], 'combined', 'common'] );
+  my $c_parser = Apache::Log::Parser->new( fast => [[qw(referer agent vhost usertrack request_duration)], 'combined', 'common'] );
   
   my $log3 = $c_parser->parse(<<CUSTOM);
   192.168.0.1 - - [07/Feb/2011:10:59:59 +0900] "GET /index.html HTTP/1.1" 200 257 "http://example.com/referrer" "Any User-Agent" "example.com" "192.168.0.1201102091208001" 901
@@ -318,7 +318,7 @@ It can process only 'common', 'combined' and custom styles with compatibility wi
 It can process any style format logs, with specification about separator, and checker for perfection. It can also process backslash-quoted double-quotes properly.
 
   # 'strict' parser is available for log formats without compatibility for 'common', like 'vhost_common' ("%v %h %l %u %t \"%r\" %>s %b")
-  my @customized_fields = qw( rhost logname user datetime request status bytes refer agent vhost usertrack request_duration );
+  my @customized_fields = qw( rhost logname user datetime request status bytes referer agent vhost usertrack request_duration );
   my $strict_parser = Apache::Log::Parser->new( strict => [
       ["\t", \@customized_fields, sub{my $x=shift;defined($x->{vhost}) and defined($x->{usertrack}) }], # TABs as separator
       [" ", \@customized_fields, sub{my $x=shift;defined($x->{vhost}) and defined($x->{usertrack}) }],
