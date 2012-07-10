@@ -15,7 +15,7 @@ our @FAST_DEBUG_FIELDS = qw( referer agent duration );
 
 my $COMMON = [" ", [qw(rhost logname user datetime request status bytes)], undef];
 my $COMBINED = [" ", [qw(rhost logname user datetime request status bytes referer agent)], sub{my $x=shift; defined($x->{agent}) and defined($x->{referer})}];
-my $DEBUG = [" ", [qw(rhost logname user datetime request status bytes referer agent duration)], sub{my $x=shift; defined($x->{agent}) and defined($x->{referer}) and defined($x->{duration})}];
+my $DEBUG = [" ", [qw(rhost logname user datetime request status bytes referer agent duration)], sub{my $x=shift; defined($x->{agent}) and defined($x->{referer}) and defined($x->{duration}) and $x->{duration} =~ m!^\d+!o}];
 my $VHOST_COMMON = [" ", [qw( vhost rhost logname user datetime request status bytes )], undef];
 
 my $STRICT_DEFAULT_FORMATS = [$DEBUG, $COMBINED, $COMMON, $VHOST_COMMON];
