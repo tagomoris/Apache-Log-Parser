@@ -1,5 +1,6 @@
 use strict;
-use Test::Most;
+use Test::More;
+use Test::Deep;
 use Test::Exception;
 
 use_ok "Apache::Log::Parser";
