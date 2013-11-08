@@ -64,7 +64,7 @@
          "web" : "https://github.com/tagomoris/Apache-Log-Parser"
       }
    },
-   "version" : "0.02",
+   "version" : "0.01",
    "x_contributors" : [
       "TAGOMORI Satoshi <tagomoris@livedoor.jp>",
       "TAGOMORI Satoshi <tagomoris@gmail.com>"
