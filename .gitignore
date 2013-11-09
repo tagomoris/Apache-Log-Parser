@@ -1,2 +1,6 @@
 cpanfile.snapshot
 local/
+blib*
+Build
+_build*
+MYMETA.*
