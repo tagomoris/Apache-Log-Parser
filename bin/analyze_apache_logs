@@ -28,6 +28,7 @@ sub parse_stdin {
 
     my $logs = 0;
     my $summary = {};
+    # $summary->{method_str}->{path} = {... };
     # path => {
     #     num => 0,
     #     status => {},
@@ -56,8 +57,12 @@ sub parse_stdin {
                 $query_string = '(blank)';
             }
         }
-        unless ($summary->{$path}) {
-            $summary->{$path} = {
+
+        my $method = $log->{method};
+
+        $summary->{$method} ||= {};
+        unless ($summary->{$method}->{$path}) {
+            $summary->{$method}->{$path} = {
                 path => undef,
                 num => 0,
                 status => {},
@@ -67,9 +72,10 @@ sub parse_stdin {
                 referer => {},
             };
         }
-        my $s = $summary->{$path};
+        my $s = $summary->{$method}->{$path};
 
         $s->{path} = $path;
+        $s->{method} = $method;
         $s->{num} += 1;
 
         $s->{status}->{$log->{status}} ||= 0;
@@ -107,14 +113,16 @@ print "TOTAL: $logs_count\n";
 
 my $have_duration = 0;
 my @summaries = ();
-foreach my $s (values(%$logs_summary)) {
-    my $num = $s->{num};
-    if ($s->{duration_flag}) {
-        $have_duration = 1;
-        $s->{duration}->{avg} = avg_subzero2( $s->{duration}->{sum}, $num );
+foreach my $m (keys(%$logs_summary)) {
+    foreach my $s (values(%{$logs_summary->{$m}})) {
+        my $num = $s->{num};
+        if ($s->{duration_flag}) {
+            $have_duration = 1;
+            $s->{duration}->{avg} = avg_subzero2( $s->{duration}->{sum}, $num );
+        }
+        $s->{bytes}->{avg} = avg_subzero2( $s->{bytes}->{sum}, $num );
+        push @summaries, $s;
     }
-    $s->{bytes}->{avg} = avg_subzero2( $s->{bytes}->{sum}, $num );
-    push @summaries, $s;
 }
 
 if ($sort eq 'duration' and $have_duration == 0) {
@@ -124,7 +132,7 @@ if ($sort eq 'duration' and $have_duration == 0) {
 
 my @sorted = ();
 if ($sort eq 'path') {
-    @sorted = sort { $a->{path} cmp $b->{path} } @summaries;
+    @sorted = sort { $a->{path} cmp $b->{path} or $a->{method} cmp $b->{method} } @summaries;
 } elsif ($sort eq 'num') {
     @sorted = sort { $a->{num} <=> $b->{num} } @summaries;
 } else { # duration avg
@@ -132,7 +140,7 @@ if ($sort eq 'path') {
 }
 
 foreach my $s (@sorted) {
-    print $s->{path}, "\t";
+    print $s->{method}, ' ', $s->{path}, "\t";
 
     if ($s->{duration_flag}) {
         print "duration ",
