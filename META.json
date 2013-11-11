@@ -48,6 +48,7 @@
       "test" : {
          "requires" : {
             "Test::Deep" : "0",
+            "Test::Exception" : "0",
             "Test::More" : "0.98"
          }
       }
@@ -64,9 +65,10 @@
          "web" : "https://github.com/tagomoris/Apache-Log-Parser"
       }
    },
-   "version" : "0.01",
+   "version" : "0.02",
    "x_contributors" : [
       "TAGOMORI Satoshi <tagomoris@livedoor.jp>",
+      "magnolia <magnolia.k@me.com>",
       "TAGOMORI Satoshi <tagomoris@gmail.com>"
    ]
 }
